@@ -32,10 +32,10 @@
   ],
   "scripts": {
     "test": "npm start",
-    "unit": "standard && mocha test/unit --recursive",
-    "integration": "standard && mocha test/integration --recursive",
+    "unit": "mocha test/unit --recursive",
+    "integration": "mocha test/integration --recursive",
     "coverage": "istanbul cover node_modules/.bin/_mocha -- --recursive",
-    "depcheck": "dependency-check app --entry main.js --unused --no-dev",
+    "depcheck": "knip --directory app --config ../knip.json --include dependencies,unlisted",
     "lint": "standard",
     "start": "electron ./app",
     "clean:linux": "rimraf --glob releases/linux* release/*.deb release/*.AppImage",
@@ -81,7 +81,16 @@
       "langObj",
       "persistantData"
     ],
-    "ignore": []
+    "ignore": [
+      "app/assets/vendor/**",
+      "app/files/**",
+      "app/views/PhotoJoiner_files/**",
+      "**/*.min.js"
+    ],
+    "env": [
+      "browser",
+      "mocha"
+    ]
   },
   "jshintConfig": {
     "esversion": 8
@@ -143,15 +152,14 @@
     }
   },
   "devDependencies": {
-    "chai": "^4.2.0",
-    "chai-as-promised": "^7.1.1",
-    "dependency-check": "^4.1.0",
+    "chai": "^6.3.0",
     "electron": "^44.5.1",
     "electron-builder": "^26.15.3",
-    "mocha": "^6.2.3",
+    "knip": "^6.39.0",
+    "mocha": "^12.0.3",
+    "playwright-core": "^1.63.0",
     "rimraf": "^6.1.3",
     "shelljs": "^0.10.0",
-    "spectron": "^8.0.0",
-    "standard": "^13.1.0"
+    "standard": "^17.1.2"
   }
 }

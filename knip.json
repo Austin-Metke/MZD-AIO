@@ -1,0 +1,21 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": [
+    "preload.js",
+    "assets/js/*.js",
+    "controllers/*.js",
+    "lib/**/*.js",
+    "menus/*.js"
+  ],
+  "project": [
+    "**/*.js"
+  ],
+  "ignore": [
+    "assets/vendor/**",
+    "files/**",
+    "views/**"
+  ],
+  "ignoreDependencies": [
+    "electron"
+  ]
+}
