@@ -75,7 +75,7 @@
 </body>
 <script>
   $(() => {
-    $('[data-toggle="tooltip"]').tooltip({html: true, delay: {show: 1200, hide: 200}});
+    $('[data-toggle="tooltip"]').tooltip({html: true, sanitize: false, delay: {show: 1200, hide: 200}});
     $('#copyleftyear').html(date().getFullYear())
   })
 </script>

@@ -446,8 +446,8 @@
               $('#ctxt-title').fadeIn(500)
             })
             $('#background').on('click', updateBgModal)
-            $('[data-toggle="tooltip"]').tooltip({ html: true, delay: { show: 1200, hide: 200 } })
-            $('[data-toggle="popover"]').popover({ html: true })
+            $('[data-toggle="tooltip"]').tooltip({ html: true, sanitize: false, delay: { show: 1200, hide: 200 } })
+            $('[data-toggle="popover"]').popover({ html: true, sanitize: false })
             $('.imgframe').mousewheel(function (event, delta) {
               this.scrollLeft -= (delta * 400)
               event.preventDefault()
