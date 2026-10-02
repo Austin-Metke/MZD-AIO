@@ -58,7 +58,7 @@
     "release": "electron-builder",
     "postbuild": "node build/target.js --clean",
     "xinstall": "cd app && ncu -u --packageFile package.json && ncu -a --packageFile package.json && npm i && cd .. && ncu -u --packageFile package.json && ncu -a --packageFile package.json && npm i",
-    "postinstall": "electron-builder install-app-deps"
+    "postinstall": "electron-builder install-app-deps && node scripts/fetch-color-schemes.js"
   },
   "standard": {
     "globals": [
@@ -101,7 +101,8 @@
     "copyright": "©2020 Trevelopment By Trevor G Martin",
     "artifactName": "${productName}-${os}_${version}.${ext}",
     "extraResources": [
-      "background-images/**/*"
+      "background-images/**/*",
+      "color-schemes/**/*"
     ],
     "extraFiles": [
       "castscreenApp/*.apk"

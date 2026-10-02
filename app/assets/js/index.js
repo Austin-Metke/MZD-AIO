@@ -35,7 +35,7 @@ var copyFolderLocation = persistantData.get('copyFolderLocation', app.getPath('d
 var visits = persistantData.get('visits', 0)
 var hasSpeedCamFiles = false // fs.existsSync(`${app.getPath('userData')}/speedcam-patch/`)
 var translateSchema, langPath, lang, langDefault
-var colordir = `${app.getPath('userData')}/color-schemes/` // Location of downloaded color theme files (userData)
+var colordir = path.join(app.getAppPath(), '../color-schemes/') // Color scheme files, shipped next to the app (extraResources)
 var hasColorFiles = fs.existsSync(`${colordir}`)
 var approot = (isDev ? './app/' : app.getAppPath())
 var builddir = `${approot}/files/tweaks/` // Location of tweak files (as .txt files)
@@ -152,7 +152,7 @@ function openApkFolder () {
 }
 
 function openDlFolder () {
-  shell.openPath(path.normalize(path.join(app.getPath('userData'), 'color-schemes/')))
+  shell.openPath(path.normalize(colordir))
 }
 
 function openDefaultFolder () {

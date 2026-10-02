@@ -26,7 +26,6 @@
       <a id='' onclick="dropDownMenu('downloads')" href="">Downloads <span class="icon-caret-down"></span></a>
       <div id="downloads" class="w3-dropdown-content w3-white w3-card-4">
         <a href="" onclick="$(this).parent().removeClass('w3-show');ipc.send('update-downloaded');"><i class="icon-download"></i> Download Update</a>
-        <a href="" class="download" onclick="$(this).parent().removeClass('w3-show');ipc.send('download-aio-files','color-schemes');$(this).hide();"><i class="icon-download"></i> Download Color Scheme Files (105MB)</a>
         <a href="" onclick="$(this).parent().removeClass('w3-show');ipc.send('download-aio-files','speedcam-patch');$(this).hide();"><i class="icon-download"></i> Download Speedcam Patch Files (200MB)</a>
       </div>
     </li>

@@ -1,33 +1,7 @@
 /* jshint esversion:6, -W033, -W117, -W097, -W116 */
-/* Automatically Open Background Dialog, Color DL and Speedcam DL On First Checkbox Click Only */
+/* Automatically Open Background Dialog and Speedcam DL On First Checkbox Click Only */
 const selectBgDir = $('.menuCheck.bg input')
-const selectColorsDL = $('.menuCheck.colors input')
 $(function () {
-  /* Attempt to download color scheme files if they don't exist */
-  selectColorsDL.on('click', function () {
-    if (selectColorsDL.hasClass('ng-pristine') && !hasColorFiles) {
-      bootbox.confirm({
-        title: 'The Color Scheme Tweak Requires Additional Files.',
-        message: 'Download Color Scheme Files?',
-        buttons: {
-          confirm: {
-            label: 'Download'
-          },
-          cancel: {
-            label: 'Cancel'
-          }
-        },
-        callback: function (result) {
-          if (result) {
-            ipc.send('download-aio-files', 'color-schemes.zip')
-          } else {
-            angular.element(selectColorsDL).scope().checked = false
-            window.alert('You Must Download Color Files To Apply Color Scheme Tweak')
-          }
-        }
-      })
-    }
-  })
   /* Attempt to download speedcam patch files if they don't exist */
   angular.element($('.install-check input#IN23')).on('click', function () {
     if ($('.install-check input#IN23, .uninstall-check input#UN23').hasClass('ng-pristine') && !hasSpeedCamFiles) {

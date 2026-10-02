@@ -769,12 +769,11 @@
         }
         // check for downloaded files
         var spfiles = fs.existsSync(`${app.getPath('userData')}/speedcam-patch/`)
-        var csfiles = fs.existsSync(`${app.getPath('userData')}/color-schemes/`)
         if ($scope.user.mainOps.includes(3)) {
-          if (!csfiles) {
+          if (!fs.existsSync(colordir)) {
             bootbox.alert({
-              title: `Please Download Color Scheme Files Before Compiling`,
-              message: `<a href="" class="w3-btn" onclick="ipc.send('download-aio-files','color-schemes')">Download Color Scheme Files</a>`
+              title: `Color Scheme Files Are Missing`,
+              message: `The color scheme files should be installed with MZD-AIO-TI in <pre>${colordir}</pre>Reinstall the app (building from source: run npm install).`
             })
             return
           }

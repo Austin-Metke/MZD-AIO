@@ -48,7 +48,6 @@ require('./menus/menu.js') // Menu
 require('./menus/context-menu.js')
 require('./menus/shortcuts.js')
 require('./lib/log')(pjson.productName || 'MZD-AIO-TI')
-var hasColorFiles = fs.existsSync(`${app.getPath('userData')}/color-schemes/`)
 var hasSpeedCamFiles = fs.existsSync(`${app.getPath('userData')}/speedcam-patch/`)
 var iconLoc = path.join(app.getAppPath(), '/icon.icns')
 var favicon = './app/icon.icns'
@@ -569,10 +568,7 @@ function openThemeDialog (event) {
 ipc.on('download-aio-files', (event, arg) => {
   var fileName = `${arg}`
   var alreadyDownloaded = false
-  if (`${fileName}` === 'color-schemes') {
-    alreadyDownloaded = hasColorFiles
-    hasColorFiles = true
-  } else if (`${fileName}` === 'speedcam-patch') {
+  if (`${fileName}` === 'speedcam-patch') {
     alreadyDownloaded = hasSpeedCamFiles
     hasSpeedCamFiles = true
   }

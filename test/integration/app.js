@@ -29,8 +29,10 @@ describe('(integration) MZD-AIO-TI', function () {
     fs.mkdirSync(userData)
     fs.mkdirSync(cwd)
     // Dev builds resolve tweak files from ./app and write the HTML compile log
-    // two folders above it, so run from a temp folder that links to app/
+    // two folders above it, so run from a temp folder that links to app/ (and
+    // to color-schemes/, which the app looks for next to itself)
     fs.symlinkSync(path.join(repo, 'app'), path.join(cwd, 'app'), 'junction')
+    fs.symlinkSync(path.join(repo, 'color-schemes'), path.join(cwd, 'color-schemes'), 'junction')
     // Point _copy_to_usb at the temp folder and skip the first-run dialogs
     fs.writeFileSync(path.join(userData, 'aio-persist.json'), JSON.stringify({
       copyFolderLocation: out, visits: 1, updateVer: 286, updated: true
@@ -58,12 +60,14 @@ describe('(integration) MZD-AIO-TI', function () {
     expect(pageErrors).to.deep.equal([])
   })
 
-  it('compiles the selected tweaks into _copy_to_usb', async () => {
-    await page.evaluate(() => {
-      document.querySelector('#IN1').click() // Touchscreen while moving
-      document.querySelector('#backupJCI').click()
+  // Tick the given checkboxes, start a compile and wait for it to finish
+  async function compile (selectors) {
+    await page.reload()
+    await page.waitForSelector('#compileButton')
+    await page.evaluate((ids) => {
+      for (const id of ids) document.querySelector(id).click()
       document.querySelector('#compileButton').click()
-    })
+    }, selectors)
     await page.waitForSelector('.confirmCompile .btn-success')
     await page.evaluate(() => document.querySelector('.confirmCompile .btn-success').click())
 
@@ -81,6 +85,10 @@ describe('(integration) MZD-AIO-TI', function () {
     }
     expect(finished, 'compile finished').to.equal(true)
     expect(await page.evaluate(() => window.errFlag), 'compile error flag').to.equal(false)
+  }
+
+  it('compiles the selected tweaks into _copy_to_usb', async () => {
+    await compile(['#IN1', '#backupJCI']) // Touchscreen while moving, JCI backup
 
     const script = fs.readFileSync(path.join(out, '_copy_to_usb', 'tweaks.sh'), 'utf8')
     expect(script).to.not.include('\r\n')
@@ -88,6 +96,14 @@ describe('(integration) MZD-AIO-TI', function () {
       const content = fs.readFileSync(path.join(tweaks, tweak), 'utf8').replace(/\r\n/g, '\n')
       expect(script, tweak).to.include(content)
     }
+    expect(pageErrors).to.deep.equal([])
+  })
+
+  it('applies a color scheme from the bundled color-schemes pack', async () => {
+    await compile(['#colors', '#color1']) // Blue
+    const blue = path.join(out, '_copy_to_usb', 'config', 'color-schemes', 'Blue')
+    expect(fs.existsSync(path.join(blue, 'jci', 'gui')), 'unzipped Blue/jci.zip').to.equal(true)
+    expect(fs.existsSync(path.join(blue, '_skin_jci_bluedemo.zip')), 'Blue navigation skin').to.equal(true)
     expect(pageErrors).to.deep.equal([])
   })
 })
