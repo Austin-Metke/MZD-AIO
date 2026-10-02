@@ -11,6 +11,7 @@
   },
   "license": "GPL-3.0",
   "main": "main.js",
+  "desktopName": "AIO.desktop",
   "repository": {
     "type": "git",
     "url": "https://gitlab.com/Trezdog44/MZD-AIO-TI"

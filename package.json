@@ -132,7 +132,9 @@
       "category": "Development",
       "executableName": "AIO",
       "synopsis": "Mazda All In One Tweaks Installer",
-      "target": "deb"
+      "target": "deb",
+      "icon": "build/icons",
+      "syncDesktopName": true
     },
     "win": {
       "target": [
