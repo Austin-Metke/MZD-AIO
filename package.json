@@ -147,7 +147,7 @@
     "forceCodeSigning": false,
     "publish": {
       "provider": "github",
-      "owner": "Trevelopment",
+      "owner": "Austin-Metke",
       "repo": "MZD-AIO"
     }
   },
