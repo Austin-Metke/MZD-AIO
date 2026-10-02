@@ -21,7 +21,7 @@ var entertainmentItems = [
 ]
 
 function buildEntList (user) {
-  mkdirp.sync(`${tmpdir}/config/audio_order_AND_no_More_Disclaimer/both/jci/gui/apps/system/js/`)
+  fs.mkdirSync(`${tmpdir}/config/audio_order_AND_no_More_Disclaimer/both/jci/gui/apps/system/js/`, { recursive: true })
   for (var item in user.entertainmentItems) {
     listOrder += 'var ' + user.entertainmentItems[item].menuItem + ' = ' + user.entertainmentItems[item].pos + ';\n'
   }

@@ -11,7 +11,7 @@
 const os = require('os')
 const fs = require('fs')
 const path = require('path')
-const isDev = require('electron-is-dev')
+const isDev = !require('electron').app.isPackaged
 
 // Set default output streams (STDOUT/STDERR) and an empty log file path
 var output = process.stdout

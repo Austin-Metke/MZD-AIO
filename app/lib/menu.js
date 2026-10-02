@@ -1,6 +1,6 @@
 'use strict'
 
-const isDev = (require('electron-is-dev') || global.appSettings.debug)
+const isDev = (!require('electron').app.isPackaged || global.appSettings.debug)
 const { app, BrowserWindow } = require('electron')
 const ipc = require('electron').ipcMain
 
@@ -18,7 +18,7 @@ const viewSubmenu = [
     accelerator: 'CmdOrCtrl+B',
     click: function (item, focusedWindow) {
       if (focusedWindow) {
-        focusedWindow.webContents.goBack()
+        focusedWindow.webContents.navigationHistory.goBack()
       }
     }
   },

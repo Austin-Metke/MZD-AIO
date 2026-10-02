@@ -31,16 +31,19 @@ const path = require('path')
 const pjson = require('./package.json')
 const _ = require('lodash')
 const fs = require('fs')
-const rimraf = require('rimraf')
-const extract = require('extract-zip') // For Unzipping
+const { removePath, extract } = require('./lib/fs-utils') // rm -rf and unzip
 const drivelist = require('drivelist') // Module that gets the available USB drives
 const backgroundDir = path.resolve(path.join(`${__dirname}`, `../background-images/`))
 const defaultDir = path.join(backgroundDir, 'default/')
 const blankAlbumArtDir = path.join(backgroundDir, 'blank-album-art/')
-const Config = require('electron-store')
+const Config = require('electron-store').default
+Config.initRenderer()
 const persistantData = new Config({ 'name': 'aio-persist' })
 const userThemes = new Config({ 'name': 'user-themes' })
 const gotTheLock = app.requestSingleInstanceLock()
+// Stopgap until the renderer stops using remote
+const remoteMain = require('@electron/remote/main')
+remoteMain.initialize()
 require('./menus/menu.js') // Menu
 require('./menus/context-menu.js')
 require('./menus/shortcuts.js')
@@ -67,15 +70,14 @@ try {
 } catch (e) {
   console.warn('No config file loaded, using defaults')
 }
-const isDev = (require('electron-is-dev') || pjson.config.debug)
+const isDev = (!app.isPackaged || pjson.config.debug)
 global.appSettings = pjson.config
 global.pjson = pjson
 persistantData.set('AIO-Ver', pjson.version)
+// Crash reports stay local: the old submitURL host (trevelopment.com) no longer resolves
 crashReporter.start({
-  companyName: 'Trevelopment',
-  submitURL: 'https://trevelopment.com/crash/bin/mini-breakpad-server',
-  uploadToServer: true,
-  extra: persistantData.store
+  uploadToServer: false,
+  globalExtra: { _companyName: 'Trevelopment' }
 })
 if (isDev) {
   console.info('Running in development')
@@ -92,8 +94,8 @@ if (isDev) {
 app.setAppUserModelId('com.trevelopment.mzd-aio-ti')
 // Adds debug features like hotkeys for triggering dev tools and reload
 // (disabled in production, unless the menu item is displayed)
-require('electron-debug')({
-  enabled: pjson.config.debug || isDev || false
+require('electron-debug').default({
+  isEnabled: Boolean(pjson.config.debug || isDev)
 })
 // Prevent window being garbage collected
 let mainWindow
@@ -138,17 +140,21 @@ function initialize () {
       'show': false,
       'icon': favicon,
       'webPreferences': {
-        'nodeIntegration': pjson.config.nodeIntegration || true, // Disabling node integration allows to use libraries such as jQuery/React, etc
+        // The renderer builds the tweak files itself with Node's fs module
+        'nodeIntegration': true,
+        'contextIsolation': false,
+        'sandbox': false,
         'nodeIntegrationInSubFrames': false,
         'preload': path.resolve(path.join(__dirname, 'preload.js'))
       }
     })
+    remoteMain.enable(win.webContents)
     mainWindowState.manage(win)
     // Remove file:// if you need to load http URLs
     win.loadURL(`file://${__dirname}/${pjson.config.url}`, {})
     win.on('closed', onClosed)
     win.on('unresponsive', function () {
-      var unresponsiveClose = dialog.showMessageBox({
+      var unresponsiveClose = dialog.showMessageBoxSync({
         type: 'warning',
         title: 'Unresponsive',
         detail: '',
@@ -173,12 +179,13 @@ function initialize () {
       } else {
         errorMessage = error + ' ' + errorCode + ' - ' + (errorDescription || 'Unknown error')
       }
-      error.sender.loadURL(`file://${__dirname}/views/404.html`)
+      win.loadURL(`file://${__dirname}/views/404.html`)
       win.webContents.on('did-finish-load', () => {
         win.webContents.send('app-error', errorMessage)
       })
     })
-    win.webContents.on('crashed', () => {
+    win.webContents.on('render-process-gone', (event, details) => {
+      if (details.reason === 'clean-exit') return
       // In the real world you should display a box and do something
       dialog.showErrorBox('MZD-AIO-TI has crashed', 'MZD-AIO-TI ERROR')
       console.error('The window has just crashed')
@@ -211,7 +218,7 @@ function initialize () {
         label: 'Delete _copy_to_usb Folder',
         type: 'normal',
         click: function (menuItem, browserWindow, event) {
-          rimraf(path.normalize(path.join(persistantData.get('copyFolderLocation'), '_copy_to_usb')), function (e) {
+          removePath(path.normalize(path.join(persistantData.get('copyFolderLocation'), '_copy_to_usb')), function (e) {
             if (e) {
               console.error(e.message)
               dialog.showErrorBox(`Error Deleting ${path.normalize(path.join(persistantData.get('copyFolderLocation'), '_copy_to_usb'))}`, `${e.message}`)
@@ -300,18 +307,13 @@ function initialize () {
     persistantData.set('visits', v)
   })
   app.on('web-contents-created', (event, contents) => {
-    contents.on('new-window', (event, url, frameName, disposition, options) => {
-      // event.preventDefault()
-      if(options.webPreferences) {
-        options.webPreferences.nodeIntegration = false
-        //console.dir(options.webPreferences)
-        //console.dir(event)
-        //console.log(url)
-        //console.log(disposition)
-        //console.log(frameName)
-        //console.dir(options)
+    // Pages opened with window.open never get Node integration
+    contents.setWindowOpenHandler(() => ({
+      action: 'allow',
+      overrideBrowserWindowOptions: {
+        webPreferences: { nodeIntegration: false, contextIsolation: true, sandbox: true }
       }
-    })
+    }))
   })
   ipc.on('reset-window-size', () => {
     mainWindow.setSize(1280, 800)
@@ -325,8 +327,11 @@ function initialize () {
       width: 600,
       height: 600,
       icon: favicon,
-      resizable: false
+      resizable: false,
+      // info.html reads versions and paths with require()
+      webPreferences: { nodeIntegration: true, contextIsolation: false, sandbox: false }
     })
+    remoteMain.enable(infoWindow.webContents)
     infoWindow.loadURL(`file://${__dirname}/views/info.html`)
     infoWindow.on('closed', () => {
       infoWindow = null
@@ -351,10 +356,13 @@ function initialize () {
       parent: mainWindow,
       resizable: true,
       'webPreferences': {
-        'nodeIntegration': pjson.config.nodeIntegration || true,
+        'nodeIntegration': true,
+        'contextIsolation': false,
+        'sandbox': false,
         'preload': path.resolve(path.join(__dirname, 'preload.js'))
       }
     })
+    remoteMain.enable(imageJoin.webContents)
     imageJoin.loadURL(`file://${__dirname}/views/joiner.html#joiner`)
     imageJoin.on('did-finish-load', () => {})
     ipc.on('bg-prev', () => {
@@ -450,8 +458,8 @@ function openBGFolder (path, event) {
     filters: [
       { name: 'Background Image', extensions: ['png', 'jpg', 'jpeg'] }
     ]
-  }, function (files) {
-    if (files) { event.sender.send('selected-bg', files) }
+  }).then(({ filePaths: files }) => {
+    if (files.length) { event.sender.send('selected-bg', files) }
   })
 }
 ipc.on('open-offscreen-bg', function (event) {
@@ -462,8 +470,8 @@ ipc.on('open-offscreen-bg', function (event) {
     filters: [
       { name: 'Off Screen Background Image', extensions: ['png', 'jpg', 'jpeg'] }
     ]
-  }, function (files) {
-    if (files) { event.sender.send('selected-offscreen-bg', files) }
+  }).then(({ filePaths: files }) => {
+    if (files.length) { event.sender.send('selected-offscreen-bg', files) }
   })
 })
 ipc.on('open-offscreen-default', function (event) {
@@ -483,8 +491,8 @@ ipc.on('open-file-blnk-art', function (event) {
     filters: [
       { name: 'Blank Album Art', extensions: ['png', 'jpg', 'jpeg'] }
     ]
-  }, function (files) {
-    if (files) { event.sender.send('selected-album-art', files) }
+  }).then(({ filePaths: files }) => {
+    if (files.length) { event.sender.send('selected-album-art', files) }
   })
 })
 ipc.on('bg-no-resize', (event, arg) => {
@@ -494,8 +502,8 @@ ipc.on('bg-no-resize', (event, arg) => {
     filters: [
       { name: 'Background Image', extensions: ['png', 'jpg', 'jpeg'] }
     ]
-  }, function (files) {
-    if (files) {
+  }).then(({ filePaths: files }) => {
+    if (files.length) {
       event.sender.send('selected-joined-bg', files)
     }
   })
@@ -508,8 +516,8 @@ function openThemeDialog (event) {
   dialog.showOpenDialog({
     title: 'MZD-AIO-TI | Choose The JCI Folder From Any Theme Package.',
     properties: ['openDirectory']
-  }, function (files) {
-    if (files) {
+  }).then(({ filePaths: files }) => {
+    if (files.length) {
       event.sender.send('custom-theme', files)
     } else {
       console.log('No Folder Selected')
@@ -601,9 +609,7 @@ ipc.on('download-aio-files', (event, arg) => {
           })
         } else if (state === 'cancelled') {
           console.log(`${fileName} Download Cancelled.`)
-          if (fs.existsSync(`${savePath}`)) {
-            fs.rmdirSync(`${savePath}`)
-          }
+          fs.rmSync(`${savePath}`, { force: true })
           mainWindow.webContents.send('notif-progress', `<h3>${fileName} Download Cancelled.</h3>`)
         } else {
           mainWindow.webContents.send('notif-progress', `<h3>${fileName} Download failed! Try Again.<br>${state}</h3>`)

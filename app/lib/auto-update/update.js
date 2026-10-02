@@ -4,7 +4,7 @@ const os = require('os')
 const ipc = require('electron').ipcMain
 const BrowserWindow = require('electron').BrowserWindow
 const platform = os.platform() + '_' + os.arch()
-const Config = require('electron-store')
+const Config = require('electron-store').default
 const persistantData = new Config({ 'name': 'aio-persist' })
 
 // const { autoUpdater } = require('electron')
@@ -22,7 +22,8 @@ module.exports = function update (options) {
   // console.info('Running version %s on platform %s', options.version, platform, " execPAth", process.execPath, "?", process.execPath.match(/[\\\/]electron/), "!", process.execPath.includes('electron'))
 
   try {
-    autoUpdater.checkForUpdates()
+    // The 'error' event below reports failures; an unhandled rejection would quit the app
+    autoUpdater.checkForUpdates().catch(() => {})
   } catch (e) {
     console.error(e.message)
     ipc.emit('update-err', autoUpdater)

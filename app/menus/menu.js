@@ -22,7 +22,7 @@ const viewSubmenu = [{
   accelerator: 'CmdOrCtrl+B',
   click: function (item, focusedWindow) {
     if (focusedWindow) {
-      focusedWindow.webContents.goBack()
+      focusedWindow.webContents.navigationHistory.goBack()
     }
   }
 },
@@ -188,7 +188,7 @@ let template = [{
     accelerator: 'CmdOrCtrl+B',
     click: function (item, focusedWindow) {
       if (focusedWindow) {
-        focusedWindow.webContents.goBack()
+        focusedWindow.webContents.navigationHistory.goBack()
       }
     }
   },

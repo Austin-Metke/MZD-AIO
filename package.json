@@ -20,7 +20,7 @@
     "url": "https://github.com/Trevelopment/MZD-AIO/issues"
   },
   "engines": {
-    "node": "^13"
+    "node": ">=22"
   },
   "keywords": [
     "Mazda",
@@ -37,10 +37,10 @@
     "coverage": "istanbul cover node_modules/.bin/_mocha -- --recursive",
     "depcheck": "dependency-check app --entry main.js --unused --no-dev",
     "lint": "standard",
-    "start": "electron ./app/main",
-    "clean:linux": "rimraf releases/linux* release/*.deb release/*.AppImage",
-    "clean:osx": "rimraf releases/mac",
-    "clean:win": "rimraf releases/win*",
+    "start": "electron ./app",
+    "clean:linux": "rimraf --glob releases/linux* release/*.deb release/*.AppImage",
+    "clean:osx": "rimraf --glob releases/mac",
+    "clean:win": "rimraf --glob releases/win*",
     "clean": "npm run clean:linux && npm run clean:win && npm run clean:osx",
     "pack:osx": "electron-builder --dir --mac",
     "pack:win": "electron-builder --dir --win --x64",
@@ -58,7 +58,7 @@
     "release": "electron-builder",
     "postbuild": "node build/target.js --clean",
     "xinstall": "cd app && ncu -u --packageFile package.json && ncu -a --packageFile package.json && npm i && cd .. && ncu -u --packageFile package.json && ncu -a --packageFile package.json && npm i",
-    "postinstall": "electron-builder install-app-deps && cd app && sh ../node_modules/.bin/electron-rebuild && cd .. && sh ./node_modules/.bin/electron-rebuild"
+    "postinstall": "electron-builder install-app-deps"
   },
   "standard": {
     "globals": [
@@ -146,11 +146,10 @@
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "dependency-check": "^4.1.0",
-    "electron": "^6.1.9",
-    "electron-builder": "^21.2.0",
-    "electron-rebuild": "^1.10.1",
+    "electron": "^44.5.1",
+    "electron-builder": "^26.15.3",
     "mocha": "^6.2.3",
-    "rimraf": "^3.0.2",
+    "rimraf": "^6.1.3",
     "shelljs": "^0.10.0",
     "spectron": "^8.0.0",
     "standard": "^13.1.0"

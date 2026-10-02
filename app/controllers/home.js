@@ -838,7 +838,7 @@
               setTimeout(function () {
                 introJs().hideHints()
               }, 4000)
-              rimraf(`${tmpdir}`, (err) => {
+              removePath(`${tmpdir}`, (err) => {
                 if (err) {
                   let m = `Error occured while deleting old '_copy_to_usb' folder: ${err}\n Try closing all other running programs and folders before compiling.`
                   aioLog(m, m)

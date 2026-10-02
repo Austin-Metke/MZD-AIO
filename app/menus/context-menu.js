@@ -6,7 +6,7 @@ const MenuItem = electron.MenuItem
 const app = electron.app
 
 const menu = new Menu()
-require('electron-context-menu')({
+require('electron-context-menu').default({
   window: BrowserWindow.fromId(1),
   append: params => [
     { type: 'separator' },

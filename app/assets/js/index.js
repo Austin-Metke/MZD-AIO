@@ -11,12 +11,13 @@
 ** ************************************************************************** **
 \* ************************************************************************** */
 /* jshint esversion:8, -W033, -W117, -W097, -W116 */
-const { electron, nativeImage, remote, clipboard, shell } = require('electron')
+const { nativeImage, clipboard, shell } = require('electron')
+const remote = require('@electron/remote')
 const { app, BrowserWindow, dialog } = remote
 const _ = require('lodash')
 const fs = require('fs')
 const ipc = require('electron').ipcRenderer
-const Config = require('electron-store')
+const Config = require('electron-store').default
 const settings = new Config({ 'name': 'aio-data' })
 const persistantData = new Config({ 'name': 'aio-persist' })
 const dataObj = new Config({ 'name': 'aio-data-obj' })
@@ -25,16 +26,12 @@ const userThemes = new Config({ 'name': 'user-themes' })
 const casdkApps = new Config({ 'name': 'casdk' })
 const speedoSave = new Config({ 'name': 'MZD_Speedometer' })
 const { writeFileSync } = require('fs')
-const isDev = require('electron-is-dev')
+const isDev = !app.isPackaged
 const path = require('path')
 const os = require('os')
-const appender = require('appender') // Appends the tweak files syncronously
-const crlf = require('crlf') // Converts line endings (from CRLF to LF)
-const copydir = require('copy-dir') // Copys full directories
 const drivelist = require('drivelist') // Module that gets the list of available USB drives
-const extract = require('extract-zip') // For Unzipping
-const mkdirp = require('mkdirp') // Equiv of Unix command mkdir -p
-const rimraf = require('rimraf') // Equiv of Unix command rm -rf
+// Copy folders, concatenate tweak files, convert line endings, delete and unzip
+const { copydir, appendFiles, convertToLF, removePath, removeMatching, extract } = require(path.join(app.getAppPath(), 'lib/fs-utils.js'))
 var copyFolderLocation = persistantData.get('copyFolderLocation', app.getPath('desktop'))
 var visits = persistantData.get('visits', 0)
 var hasSpeedCamFiles = false // fs.existsSync(`${app.getPath('userData')}/speedcam-patch/`)
@@ -103,7 +100,7 @@ function saveMenuLock () {
 }
 /* Create Temporary Folder To Hold Images Before Compiling */
 if (!fs.existsSync(varDir)) {
-  mkdirp.sync(varDir)
+  fs.mkdirSync(varDir, { recursive: true })
 }
 
 function helpMessageFreeze (item) {
@@ -140,25 +137,27 @@ ipc.on('open-copy-folder', openCopyFolder)
 function openCopyFolder () {
   var openCopy = `${persistantData.get('copyFolderLocation', copyFolderLocation)}/_copy_to_usb/`
   if (!fs.existsSync(openCopy)) {
-    mkdirp.sync(openCopy)
+    fs.mkdirSync(openCopy, { recursive: true })
   }
-  if (!shell.openItem(openCopy)) {
-    bootbox.alert({
-      message: `"${copyFolderLocation.replace('config', '')}" Does Not Exist.  Click "Start Compilation" to Run The Tweak Builder and Create the _copy_to_usb Folder.`
-    })
-  }
+  shell.openPath(openCopy).then((err) => {
+    if (err) {
+      bootbox.alert({
+        message: `"${copyFolderLocation.replace('config', '')}" Does Not Exist.  Click "Start Compilation" to Run The Tweak Builder and Create the _copy_to_usb Folder.`
+      })
+    }
+  })
 }
 
 function openApkFolder () {
-  shell.openItem(path.normalize(path.join('file://', __dirname, '../../castscreenApp/')))
+  shell.openPath(path.normalize(path.join(__dirname, '../../castscreenApp/')))
 }
 
 function openDlFolder () {
-  shell.openItem(path.normalize(path.join(app.getPath('userData'), 'color-schemes/')))
+  shell.openPath(path.normalize(path.join(app.getPath('userData'), 'color-schemes/')))
 }
 
 function openDefaultFolder () {
-  shell.openItem(path.normalize(path.join('file://', __dirname, '../background-images/default/')))
+  shell.openPath(path.normalize(path.join(__dirname, '../background-images/default/')))
 }
 
 function autoHelp () {
@@ -366,19 +365,18 @@ function donate () {
 // Returns list of USB Drives
 async function getUSBDrives () {
   var disks = []
-  var dsklst = await drivelist.list()
-  drivelist.list(function (error, dsklst) {
-    if (error) {
-      console.error('Error finding USB drives')
-    }
-    for (var i = 0; i < dsklst.length; i++) {
-      if (!dsklst[i].system) {
-        // console.debug(disks[i]);console.debug(disks[i].name);console.debug(disks[i].description)
-        disks.push({ 'name': dsklst[i].name, 'desc': dsklst[i].description, 'mp': dsklst[i].mountpoint })
-      }
-    }
+  try {
+    var dsklst = await drivelist.list()
+  } catch (e) {
+    console.error('Error finding USB drives')
     return disks
-  })
+  }
+  for (var i = 0; i < dsklst.length; i++) {
+    if (!dsklst[i].isSystem && dsklst[i].mountpoints[0]) {
+      disks.push({ 'name': dsklst[i].device, 'desc': dsklst[i].description, 'mp': dsklst[i].mountpoints[0].path })
+    }
+  }
+  return disks
 }
 
 function getParameterByName (name, url) {

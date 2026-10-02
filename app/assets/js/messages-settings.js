@@ -25,7 +25,7 @@ function getMsgLangs () {
   })
 }
 function resetMsgLang () {
-  rimraf.sync(`${varDir}/message_replies/`)
+  removePath(`${varDir}/message_replies/`)
   getMsgLangs()
 }
 function getMsgsForLang (msgLang) {

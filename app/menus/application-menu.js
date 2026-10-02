@@ -23,7 +23,7 @@ let template = [{
   label: 'Back',
   click: function (item, focusedWindow) {
     if (focusedWindow) {
-      focusedWindow.webContents.goBack()
+      focusedWindow.webContents.navigationHistory.goBack()
     }
   }
 }, {

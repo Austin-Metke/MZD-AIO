@@ -69,7 +69,7 @@ document.getElementById('submit').addEventListener('click', function () {
   fs.writeFile(`${app.getPath('documents')}/${fileName}.aio.json`, JSON.stringify(editor.getValue()), function () {
     bootbox.alert({
       title: `${fileName}.aio.json Saved`,
-      message: `${fileName}.aio.json ${langObj.translatorWindow[7].label} <button class="w3-btn" onclick="shell.openItem(path.normalize(path.join('file://', app.getPath('documents'))))">${langObj.translatorWindow[8].label}</button><button class="w3-btn" onclick="shell.openItem(path.normalize(path.join('file://', app.getPath('documents'), '${fileName}.aio.json')))">Open ${fileName} JSON File</button>`
+      message: `${fileName}.aio.json ${langObj.translatorWindow[7].label} <button class="w3-btn" onclick="shell.openPath(app.getPath('documents'))">${langObj.translatorWindow[8].label}</button><button class="w3-btn" onclick="shell.openPath(path.join(app.getPath('documents'), '${fileName}.aio.json'))">Open ${fileName} JSON File</button>`
     })
   })
 })
@@ -82,9 +82,9 @@ document.getElementById('import').addEventListener('click', function () {
     filters: [
       { name: 'AIO Translation File', extensions: ['json'] }
     ]
-  }, function (files) {
-    if (files) {
-      jsonData = fs.readFileSync(files[0], { encoding: 'utf8' })
+  }).then(({ filePaths }) => {
+    if (filePaths.length) {
+      jsonData = fs.readFileSync(filePaths[0], { encoding: 'utf8' })
       editor.setValue(JSON.parse(jsonData))
     }
   })
