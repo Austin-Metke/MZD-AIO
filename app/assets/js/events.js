@@ -145,11 +145,11 @@ ipc.on('close-featherlight', function (event) {
   $.featherlight.current().close()
 })
 ipc.on('open-translator', function () {
-  remote.BrowserWindow.fromId(1).focus()
+  ipc.send('focus-main-window')
   $('#openTranslator').click()
 })
 ipc.on('go-home', function () {
-  remote.BrowserWindow.fromId(1).focus()
+  ipc.send('focus-main-window')
   $('#goHome').click()
 })
 /*

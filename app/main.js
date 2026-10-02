@@ -20,6 +20,9 @@ const Tray = electron.Tray
 const ipc = electron.ipcMain
 const nativeImage = electron.nativeImage
 const crashReporter = electron.crashReporter
+const clipboard = electron.clipboard
+const ClipboardItem = electron.ClipboardItem
+const shell = electron.shell
 // Manage unhandled exceptions as early as possible
 process.on('uncaughtException', (e) => {
   console.error(`Caught unhandled exception: ${e}`)
@@ -41,9 +44,6 @@ Config.initRenderer()
 const persistantData = new Config({ 'name': 'aio-persist' })
 const userThemes = new Config({ 'name': 'user-themes' })
 const gotTheLock = app.requestSingleInstanceLock()
-// Stopgap until the renderer stops using remote
-const remoteMain = require('@electron/remote/main')
-remoteMain.initialize()
 require('./menus/menu.js') // Menu
 require('./menus/context-menu.js')
 require('./menus/shortcuts.js')
@@ -148,7 +148,6 @@ function initialize () {
         'preload': path.resolve(path.join(__dirname, 'preload.js'))
       }
     })
-    remoteMain.enable(win.webContents)
     mainWindowState.manage(win)
     // Remove file:// if you need to load http URLs
     win.loadURL(`file://${__dirname}/${pjson.config.url}`, {})
@@ -307,6 +306,14 @@ function initialize () {
     persistantData.set('visits', v)
   })
   app.on('web-contents-created', (event, contents) => {
+    // Node-enabled windows only load the bundled pages: open web links in the
+    // browser instead of navigating, which would give the site Node access
+    contents.on('will-navigate', (event, url) => {
+      if (!url.startsWith('file://') && contents.getLastWebPreferences()?.nodeIntegration) {
+        event.preventDefault()
+        shell.openExternal(url)
+      }
+    })
     // Pages opened with window.open never get Node integration
     contents.setWindowOpenHandler(() => ({
       action: 'allow',
@@ -331,7 +338,6 @@ function initialize () {
       // info.html reads versions and paths with require()
       webPreferences: { nodeIntegration: true, contextIsolation: false, sandbox: false }
     })
-    remoteMain.enable(infoWindow.webContents)
     infoWindow.loadURL(`file://${__dirname}/views/info.html`)
     infoWindow.on('closed', () => {
       infoWindow = null
@@ -362,7 +368,6 @@ function initialize () {
         'preload': path.resolve(path.join(__dirname, 'preload.js'))
       }
     })
-    remoteMain.enable(imageJoin.webContents)
     imageJoin.loadURL(`file://${__dirname}/views/joiner.html#joiner`)
     imageJoin.on('did-finish-load', () => {})
     ipc.on('bg-prev', () => {
@@ -441,6 +446,40 @@ async function getUSBDrives () {
 } */
 // Manage Squirrel startup event (Windows)
 // require('./lib/auto-update/startup')(initialize)
+
+// Handlers for lib/app-bridge.js, which replaces the remote module in the renderer
+const BRIDGE_PATHS = ['home', 'appData', 'userData', 'sessionData', 'temp', 'exe', 'module', 'desktop', 'documents', 'downloads', 'music', 'pictures', 'videos', 'logs']
+ipc.on('app-info', (event) => {
+  const paths = {}
+  for (const name of BRIDGE_PATHS) {
+    try { paths[name] = app.getPath(name) } catch (e) {}
+  }
+  event.returnValue = { name: app.getName(), version: app.getVersion(), appPath: app.getAppPath(), isPackaged: app.isPackaged, paths }
+})
+ipc.on('show-error-box', (event, title, content) => {
+  dialog.showErrorBox(title, content)
+  event.returnValue = null
+})
+ipc.handle('show-open-dialog', (event, options) => dialog.showOpenDialog(options))
+ipc.on('focus-main-window', () => {
+  if (mainWindow) mainWindow.focus()
+})
+ipc.on('toggle-fullscreen', (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender)
+  if (win) win.setFullScreen(!win.isFullScreen())
+})
+ipc.on('app-quit', () => app.quit())
+// The clipboard API is asynchronous. Log failures: an unhandled rejection
+// would reach the uncaughtException handler, which quits the app.
+const logClipboardError = (e) => console.error(`Clipboard error: ${e}`)
+ipc.handle('clipboard-read-text', () => clipboard.readText())
+ipc.on('clipboard-write-text', (event, text) => {
+  clipboard.writeText(text).catch(logClipboardError)
+})
+ipc.on('clipboard-write-image', (event, imagePath) => {
+  const png = nativeImage.createFromPath(imagePath).toPNG()
+  clipboard.write([new ClipboardItem({ 'image/png': new Blob([png], { type: 'image/png' }) })]).catch(logClipboardError)
+})
 
 ipc.on('open-file-bg', function (event) {
   openBGFolder(backgroundDir, event)

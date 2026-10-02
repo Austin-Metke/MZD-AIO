@@ -671,7 +671,7 @@
       $scope.startRestoreCompile = function () {
         bootbox.hideAll()
         closeHelpDrop()
-        remote.BrowserWindow.fromId(1).focus()
+        ipc.send('focus-main-window')
         if (!$scope.user.restore.full) { return }
         var msg = '<center>This script will completely remove all tweaks installed by AIO.\n'
         if ($scope.user.restore.delBackups) { msg += `<h3 style='width:100%;text-align:center;'>*** YOU HAVE CHOSEN TO DELETE ALL BACKUP FILES. ***</h3><br><h4>BY CONTINUING, YOU ARE ACKNOWLEDGING THAT YOU UNDERSTAND THE IMPLICATIONS OF PERFORMING THIS ACTION.</h4>` }
@@ -707,7 +707,7 @@
       $scope.startAutorunCompile = function () {
         bootbox.hideAll()
         closeHelpDrop()
-        remote.BrowserWindow.fromId(1).focus()
+        ipc.send('focus-main-window')
         var armsg = '<center>CMU-Autorun Scripts<br>Installer/Uninstaller For Autorun Scripts.<br>'
         armsg += '</center>'
         armsg += '<a href class="autorunHelp" onclick="autoHelp()"><span class="icon-question2"></span></a>'

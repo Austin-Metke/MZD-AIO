@@ -31,7 +31,6 @@
     "url": "index.html"
   },
   "dependencies": {
-    "@electron/remote": "^2.1.3",
     "drivelist": "^12.0.2",
     "electron-context-menu": "^5.1.0",
     "electron-debug": "^5.0.0",

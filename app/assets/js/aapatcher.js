@@ -3,9 +3,7 @@
 
 const path = require('path')
 const cp = require('child_process')
-const remote = require('@electron/remote')
-const app = remote.app
-const dialog = remote.dialog
+const { app, dialog } = require('../../lib/app-bridge')
 const isDev = !app.isPackaged
 const aaPatchPath = path.resolve((isDev ? path.resolve(`${__dirname}`, '../../') : path.dirname(process.execPath)), 'resources/adb/')
 const aaPatcher = path.join(aaPatchPath, 'adb.exe')

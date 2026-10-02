@@ -143,7 +143,8 @@ editor.on('change', function () {
 })
 $(function () {
   $('input, textarea').dblclick(function () {
-    editor.getEditor($(this).parent().parent().attr('data-schemapath')).setValue(clipboard.readText())
+    const field = editor.getEditor($(this).parent().parent().attr('data-schemapath'))
+    clipboard.readText().then((text) => field.setValue(text))
   })
   $('input, textarea').click(function () {
     $('#cpyBtn').insertAfter($(this)) // $(this).val()

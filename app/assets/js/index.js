@@ -11,9 +11,8 @@
 ** ************************************************************************** **
 \* ************************************************************************** */
 /* jshint esversion:8, -W033, -W117, -W097, -W116 */
-const { nativeImage, clipboard, shell } = require('electron')
-const remote = require('@electron/remote')
-const { app, BrowserWindow, dialog } = remote
+const { nativeImage, shell } = require('electron')
+const { app, dialog, clipboard } = window.appBridge // set up by preload.js
 const _ = require('lodash')
 const fs = require('fs')
 const ipc = require('electron').ipcRenderer
@@ -317,7 +316,7 @@ function dropDownMenu (id) {
 }
 
 function toggleFullScreen () {
-  remote.BrowserWindow.getFocusedWindow().setFullScreen(!remote.BrowserWindow.getFocusedWindow().isFullScreen())
+  ipc.send('toggle-fullscreen')
   $('.icon-fullscreen').toggleClass('icon-fullscreen-exit')
 }
 // Extra Options Togglers

@@ -86,8 +86,7 @@ function showNotification (title, message, fadeouttime, callback) {
     }
   } else {
     myNotification.onclick = () => {
-      remote.BrowserWindow.getChildWindows().close()
-      remote.BrowserWindow.fromId(1).focus()
+      ipc.send('focus-main-window')
       console.log('Notification clicked: ' + myNotification.timestamp)
     }
   }
