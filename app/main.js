@@ -168,7 +168,11 @@ function initialize () {
     if (!isDev) {
       win.setMenuBarVisibility(false)
     }
-    win.webContents.on('did-fail-load', (error, errorCode, errorDescription) => {
+    win.webContents.on('did-fail-load', (error, errorCode, errorDescription, validatedURL, isMainFrame) => {
+      // Only a failed page load is fatal. ERR_ABORTED (-3) is a cancelled load,
+      // e.g. "Start Over" reloading while the translate widget loads, and
+      // swapping in 404.html then aborts that load too, looping forever.
+      if (!isMainFrame || errorCode === -3) return
       var errorMessage
       if (errorCode === -105) {
         errorMessage = errorDescription || '[Connection Error] The host name could not be resolved, check your network connection'
@@ -177,7 +181,7 @@ function initialize () {
         errorMessage = error + ' ' + errorCode + ' - ' + (errorDescription || 'Unknown error')
       }
       win.loadURL(`file://${__dirname}/views/404.html`)
-      win.webContents.on('did-finish-load', () => {
+      win.webContents.once('did-finish-load', () => {
         win.webContents.send('app-error', errorMessage)
       })
     })
