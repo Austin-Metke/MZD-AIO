@@ -127,6 +127,7 @@ function buildTweaksConfig (user, apps) {
             addBlankAlbumArt(user, this)
           })
           inStr2.on('close', function () {
+            if (this.errored) return // 'close' also follows 'error', which already stopped the build
             aioLog('Missing Blank Album Art... Using Default')
             checkForColorScheme(user)
           })
@@ -136,6 +137,7 @@ function buildTweaksConfig (user, apps) {
         addBlankAlbumArt(user, this)
       })
       inStr.on('close', function () {
+        if (this.errored) return // 'close' also follows 'error', where the fallback above continues the build
         aioLog('Blank Album Art Copy Successful!')
         checkForColorScheme(user)
       })

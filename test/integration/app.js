@@ -113,6 +113,17 @@ describe('(integration) MZD-AIO-TI', function () {
     expect(pageErrors).to.deep.equal([])
   })
 
+  it('writes each tweak once when no blank album art has been chosen', async () => {
+    fs.rmSync(path.join(tmp, 'userData', 'background', 'no_artwork_icon.png'), { force: true })
+    await compile(['#IN16']) // Change Blank Album Art Frame
+
+    const script = fs.readFileSync(path.join(out, '_copy_to_usb', 'tweaks.sh'), 'utf8')
+    const tweak = fs.readFileSync(path.join(tweaks, '16_blnkframe-i.txt'), 'utf8').replace(/\r\n/g, '\n')
+    expect(script.split(tweak)).to.have.lengthOf(2)
+    expect(fs.existsSync(path.join(out, '_copy_to_usb', 'config', 'blank-album-art-frame', 'jci', 'gui', 'common', 'images', 'no_artwork_icon.png')), 'default blank album art').to.equal(true)
+    expect(pageErrors).to.deep.equal([])
+  })
+
   it('applies a color scheme from the bundled color-schemes pack', async () => {
     await compile(['#colors', '#color1']) // Blue
     const blue = path.join(out, '_copy_to_usb', 'config', 'color-schemes', 'Blue')
