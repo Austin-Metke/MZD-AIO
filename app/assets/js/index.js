@@ -431,8 +431,17 @@ function saveAIOLogHTML () {
   a.click()
 }
 
+// Release page to open from "Check For Update" (e.g. the fork's GitHub releases).
+// Opened in the browser: remote pages must not load into this Node-enabled window.
+var updateCheckURL = ''
+
 function checkForUpdate (ver) {
-  $.featherlight(`https://aio.trevelopment.com/update.php?ver=${updateVer}`, { closeSpeed: 100, variant: 'checkForUpdate' })
+  // Stub: the old update page (aio.trevelopment.com) no longer exists
+  if (updateCheckURL) {
+    shell.openExternal(updateCheckURL)
+  } else {
+    snackbar(`Update checks are not available yet. You are running MZD-AIO-TI v${app.getVersion()}.`)
+  }
 }
 
 function formatDateCustom (dateFormatType) {
