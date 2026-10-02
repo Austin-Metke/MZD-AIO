@@ -68,9 +68,9 @@ if (window.location.pathname.includes('joiner')) {
   langDefault = '../lang/english.aio.json'
   translateSchema = require('../lang/aio.schema.json')
 } else {
-  langPath = `${app.getPath('home')}/lang/${lang}.aio.json`
-  langDefault = `${app.getPath('home')}/lang/english.aio.json`
-  translateSchema = require(`${app.getPath('home')}/lang/aio.schema.json`)
+  langPath = `${app.getAppPath()}/lang/${lang}.aio.json`
+  langDefault = `${app.getAppPath()}/lang/english.aio.json`
+  translateSchema = require(`${app.getAppPath()}/lang/aio.schema.json`)
 }
 var langObj = require(langPath)
 var langDef = require(langDefault)

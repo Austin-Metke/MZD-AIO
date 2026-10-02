@@ -81,15 +81,13 @@ crashReporter.start({
 })
 if (isDev) {
   console.info('Running in development')
-  app.setPath('home', path.resolve(`${__dirname}`))
-  console.log(`Home: ${app.getPath('home')}`)
+  console.log(`App path: ${app.getAppPath()}`)
   // console.debug(JSON.stringify(pjson))
   console.debug(JSON.stringify(persistantData.store))
   console.debug(JSON.stringify(pjson.config))
 } else {
   // console.info('Running in production')
-  app.setPath('home', app.getAppPath())
-  console.log(`Home: ${app.getPath('home')}`)
+  console.log(`App path: ${app.getAppPath()}`)
 }
 app.setAppUserModelId('com.trevelopment.mzd-aio-ti')
 // Adds debug features like hotkeys for triggering dev tools and reload

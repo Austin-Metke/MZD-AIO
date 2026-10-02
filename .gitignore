@@ -17,7 +17,6 @@ launch*
 /tools
 sign.sh
 /app/.pki
-/app/.local
 
 AIO\.sh
 
