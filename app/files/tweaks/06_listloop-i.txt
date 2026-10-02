@@ -10,8 +10,8 @@ then
 fi
 
 # NO MORE COMPATIBILITY CHECK NEEDED - UNIVERSAL COMPATIBILITY FROM v55 - v70.00.xxx
-# v70.00.335+ will not install mod/needs verification of compatibility
-if [ $COMPAT_GROUP -le 6 ]
+# v70.00.335+ will not install mod/needs verification of compatibility (v74 has been tested)
+if [ $COMPAT_GROUP -le 6 ] || [ $COMPAT_GROUP -eq 8 ]
 then
   cp -a "${MYDIR}/config/list-loop/jci/gui/common/controls/List2/js/List2Ctrl.js" /jci/gui/common/controls/List2/js/
   log_message "===                       Copied List2Ctrl.js                         ==="

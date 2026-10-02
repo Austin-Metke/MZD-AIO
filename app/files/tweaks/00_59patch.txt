@@ -7,7 +7,7 @@ then
   then
     cp -a ${MYDIR}/config/jci/gui/apps/system/js/systemApp.js /jci/gui/apps/system/js/
     log_message "===        Patched systemApp.js for AIO + CASDK apps for v59          ==="
-  elif [ $COMPAT_GROUP -eq 6 ]
+  elif [ $COMPAT_GROUP -eq 6 ] || [ $COMPAT_GROUP -eq 8 ]
   then
     cp -a ${MYDIR}/config/jci/gui/apps/system/js/systemApp.70.js /jci/gui/apps/system/js/systemApp.js
     log_message "===        Patched systemApp.js for AIO + CASDK apps for v70          ==="

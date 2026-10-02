@@ -106,10 +106,10 @@ function buildTweaksConfig (user, apps) {
       addTweak('00_backup.txt')
     }
     if (user.mainOps.includes(0) || user.options.includes(21)) {
-      addTweak('00_wifi.txt')
+      addUntestedOnV74('ENABLE WIFI', () => addTweak('00_wifi.txt'))
     }
     if (user.mainOps.includes(4) || user.options.includes(21)) {
-      addTweak('00_sshbringback.txt')
+      addUntestedOnV74('SSH_BRINGBACK', () => addTweak('00_sshbringback.txt'))
     }
     if (user.options.includes(16)) {
       fs.mkdirSync(`${tmpdir}/config/blank-album-art-frame/jci/gui/common/images/`, { recursive: true })
@@ -469,7 +469,7 @@ function buildTweak (user) {
     addTweakDir('media-order-patching', true)
   }
   if (user.options.includes(24)) {
-    addTweak('24_castscreen-i.txt')
+    addUntestedOnV74('CASTSCREEN-RECEIVER', () => addTweak('24_castscreen-i.txt'))
     addTweakDir('castscreen-receiver', true)
   }
   if (user.options.includes(11)) {
@@ -489,7 +489,7 @@ function buildTweak (user) {
     addTweakDir('bigger-album-art', true)
   }
   if (user.options.includes(15)) {
-    addTweak('15_btnbackground-i.txt')
+    addUntestedOnV74('REMOVE BACKGROUND OVERLAY GRAPHICS', () => addTweak('15_btnbackground-i.txt'))
     addTweakDir('NoButtons', true)
   }
   if (user.options.includes(16)) {
@@ -500,17 +500,19 @@ function buildTweak (user) {
     addTweakDir('videoplayer', true)
   }
   if (user.options.includes(27)) {
-    addTweak('27_aioapp-i.txt')
-    if (user.screenOffBoot) {
-      addTweak('27_aioapp-screenoff.txt')
-    }
+    addUntestedOnV74('AIO TWEAKS APP', () => {
+      addTweak('27_aioapp-i.txt')
+      if (user.screenOffBoot) {
+        addTweak('27_aioapp-screenoff.txt')
+      }
+    })
     addTweakDir('aio-app', true)
   }
   if (user.options.includes(27) || user.options.includes(17)) {
     addTweak('00_storage-i.txt', true)
   }
   if (user.mzdmeter.inst) {
-    addTweak('28_mzdmeter-i.txt')
+    addUntestedOnV74('MZD METER', () => addTweak('28_mzdmeter-i.txt'))
     addTweakDir('mzdmeter', true)
   }
   if (user.options.includes(22)) {
@@ -523,20 +525,22 @@ function buildTweak (user) {
     } else {
       addTweakDir('androidauto', true)
     }
-    addTweak('25_androidauto-i.txt')
-    if (user.aaCarGPS) {
-      addTweak('25_androidautocargps.txt')
-    } else if (user.aaBetaVer) {
-      addTweak('25_androidautorevgps.txt')
-    }
-    if (user.aaWifi) {
-      if (user.aaHUD) {
-        addTweakDir('androidautowifi', true, replaceInFile, `${tmpdir}/config/androidautowifi/headunit-wrapper`, `DEBUG=0`, `DEBUG=1`)
-      } else {
-        addTweakDir('androidautowifi', true)
+    addUntestedOnV74('ANDROID AUTO HEADUNIT APP', () => {
+      addTweak('25_androidauto-i.txt')
+      if (user.aaCarGPS) {
+        addTweak('25_androidautocargps.txt')
+      } else if (user.aaBetaVer) {
+        addTweak('25_androidautorevgps.txt')
       }
-      addTweak('25_androidautowifi-i.txt')
-    }
+      if (user.aaWifi) {
+        if (user.aaHUD) {
+          addTweakDir('androidautowifi', true, replaceInFile, `${tmpdir}/config/androidautowifi/headunit-wrapper`, `DEBUG=0`, `DEBUG=1`)
+        } else {
+          addTweakDir('androidautowifi', true)
+        }
+        addTweak('25_androidautowifi-i.txt')
+      }
+    })
   }
   if (user.mainOps.includes(4) || user.options.includes(21)) {
     addTweakDir('ssh_bringback', true)
@@ -672,6 +676,15 @@ function buildTweak (user) {
     addTweak(user.options.includes(11) ? '00_factory-reset-end.txt' : '00_end.txt')
     writeTweaksFile()
   }, 2000)
+}
+// Wraps the tweaks added by addTweaks so tweaks.sh skips them on v74+, where they have not been tested
+function addUntestedOnV74 (name, addTweaks) {
+  const guard = `${varDir}/v74-${name.replace(/\W+/g, '-').toLowerCase()}.txt`
+  fs.writeFileSync(guard, `if install_allowed "${name}"\nthen\n`)
+  tweaks2write.push(guard)
+  addTweaks()
+  fs.writeFileSync(`${varDir}/v74-end.txt`, 'fi\n')
+  tweaks2write.push(`${varDir}/v74-end.txt`)
 }
 // function to add each tweak to the array
 function addTweak (twk) {
@@ -1414,17 +1427,19 @@ function buildCASDK (user, apps) {
   casdkAppOptions(apps, user.casdk.inst)
   if (user.casdk.inst) {
     fs.mkdirSync(`${tmpdir}/casdk/`, { recursive: true })
-    if (!user.casdkAppsOnly) {
-      tweaks2write.push(`${builddir}00__casdk-i.txt`)
-      tweaks2write.push(`${builddir}00_storage-i.txt`)
-      if (user.casdk.region === 'eu') {
-        fs.writeFileSync(`${varDir}/casdkreg.txt`, `sed -i "s/'na'/'eu'/g" /jci/gui/apps/custom/runtime/runtime.js && log_message "===                      Region Changed to EU                         ==="`)
-      } else {
-        fs.writeFileSync(`${varDir}/casdkreg.txt`, `sed -i "s/'eu'/'na'/g" /jci/gui/apps/custom/runtime/runtime.js && log_message "===                      Region Changed to NA                         ==="`)
+    addUntestedOnV74('CASDK', () => {
+      if (!user.casdkAppsOnly) {
+        tweaks2write.push(`${builddir}00__casdk-i.txt`)
+        tweaks2write.push(`${builddir}00_storage-i.txt`)
+        if (user.casdk.region === 'eu') {
+          fs.writeFileSync(`${varDir}/casdkreg.txt`, `sed -i "s/'na'/'eu'/g" /jci/gui/apps/custom/runtime/runtime.js && log_message "===                      Region Changed to EU                         ==="`)
+        } else {
+          fs.writeFileSync(`${varDir}/casdkreg.txt`, `sed -i "s/'eu'/'na'/g" /jci/gui/apps/custom/runtime/runtime.js && log_message "===                      Region Changed to NA                         ==="`)
+        }
+        tweaks2write.push(`${varDir}/casdkreg.txt`)
       }
-      tweaks2write.push(`${varDir}/casdkreg.txt`)
-    }
-    tweaks2write.push(`${builddir}00__casdkapps-i.txt`)
+      tweaks2write.push(`${builddir}00__casdkapps-i.txt`)
+    })
     copydir(`${builddir}casdk`, `${tmpdir}/casdk`, function (stat, filepath, filename) {
       if (filepath.includes(`apps`)) {
         return false

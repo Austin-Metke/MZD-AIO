@@ -12,12 +12,12 @@ then
   TRACKORDER_DISCLAIMER=1
   TRACKORDER_DISCLAIMER_FILE=59
   log_message "===       FW ${CMU_SW_VER} detected, copy matching systemApp.js       ==="
-elif [ $COMPAT_GROUP -eq 6 ]
+elif [ $COMPAT_GROUP -eq 6 ] || [ $COMPAT_GROUP -eq 8 ]
 then
   TRACKORDER_DISCLAIMER=1
   TRACKORDER_DISCLAIMER_FILE=70
   log_message "===       FW ${CMU_SW_VER} detected, copy matching systemApp.js       ==="
-elif [ $COMPAT_GROUP -gt 6 ]
+elif [ $COMPAT_GROUP -eq 7 ]
 then
   killall -q jci-dialog
   /jci/tools/jci-dialog --confirm --title="NO MORE DISCLAIMER TWEAK" --text="YOUR FW VERSION IS ${CMU_SW_VER}\nNO MORE DISCLAIMER TWEAK HAS ONLY\n BEEN TESTED UP TO V70.00.335\n\n***** INSTALL AT YOUR OWN RISK! *****" --ok-label="INSTALL" --cancel-label="SKIP"
@@ -27,7 +27,7 @@ fi
 [ $TRACKORDER_DISCLAIMER -le 1 ] && show_message "REMOVE DISCLAIMER ..."
 
 # Compatibility check falls into 3 groups:
-# 70.00.XXX ($COMPAT_GROUP=6)
+# 70.00.XXX & 74.00.XXX ($COMPAT_GROUP=6 & 8)
 # 58.00.XXX - 59.00.XXX ($COMPAT_GROUP=2-5)
 # 55.XX.XXX - 56.XX.XXX ($COMPAT_GROUP=1)
 if [ $TRACKORDER_DISCLAIMER -ne 2 ]

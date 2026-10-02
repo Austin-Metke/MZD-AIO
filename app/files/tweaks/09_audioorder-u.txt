@@ -11,7 +11,7 @@ then
   TRACKORDER_AUDIO=1
   TRACKORDER_AUDIO_FILE=59
   log_message "===       FW ${CMU_SW_VER} detected, copy matching systemApp.js       ==="
-elif [ $COMPAT_GROUP -eq 6 ]
+elif [ $COMPAT_GROUP -eq 6 ] || [ $COMPAT_GROUP -eq 8 ]
 then
   TRACKORDER_AUDIO=1
   TRACKORDER_AUDIO_FILE=70
@@ -19,7 +19,7 @@ then
 fi
 
 # Compatibility check falls into 3 groups:
-# 70.00.XXX ($COMPAT_GROUP=6)
+# 70.00.XXX & 74.00.XXX ($COMPAT_GROUP=6 & 8)
 # 58.00.XXX - 59.00.XXX ($COMPAT_GROUP=2-5)
 # 55.XX.XXX - 56.XX.XXX ($COMPAT_GROUP=1)
 

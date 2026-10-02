@@ -70,7 +70,8 @@ remove_casdk_app()
     log_message "===                Uninstalled CASDK App: ${CASDK_APP:0:10}                  ==="
   fi
 }
-# Compatibility check falls into 7 groups:
+# Compatibility check falls into 8 groups:
+# 74.00.XXX+ ($COMPAT_GROUP=8 *Only tweaks tested on v74 are installed*)
 # 70.00.336+ ($COMPAT_GROUP=7 *Temporary, until tested*)
 # 70.00.XXX ($COMPAT_GROUP=6)
 # 59.00.5XX ($COMPAT_GROUP=5)
@@ -112,9 +113,24 @@ compatibility_check()
     else
       echo 7 && return # Past v70.00.352 is unknown and cannot be trusted
     fi
+  elif [ $_VER -ge 74 ]
+  then
+    echo 8 && return # v74 uses the v70 tweak files, untested tweaks are skipped
   else
     echo 0
   fi
+}
+# Tweaks that have not been tested on v74 are skipped on v74+
+# pass the tweak name, returns 1 if the tweak should not be installed
+install_allowed()
+{
+  if [ $COMPAT_GROUP -eq 8 ]
+  then
+    show_message "${1} HAS NOT BEEN TESTED ON ${CMU_SW_VER}\nTHIS TWEAK WILL NOT BE INSTALLED!"
+    log_message "***** ${1} Not Tested On ${CMU_SW_VER}... Install Skipped *****"
+    return 1
+  fi
+  return 0
 }
 remove_aio_css()
 {
@@ -609,7 +625,7 @@ then
 fi
 # Compatibility Check
 
-if [ $COMPAT_GROUP -gt 6 ]
+if [ $COMPAT_GROUP -eq 7 ]
 then
   sleep 2
   show_message_OK "WARNING! VERSION ${CMU_SW_VER} DETECTED\nAIO COMPATIBILITY HAS ONLY BEEN TESTED UP TO V70.00.352\nIF YOU ARE RUNNING A LATER FW VERSION\n***** USE EXTREME CAUTION!! *****\n***** CONTINUE AT YOUR OWN RISK *****"
@@ -623,6 +639,7 @@ then
     show_message_OK "MZD-AIO-TI v.${AIO_VER}\nDetected compatible version ${CMU_SW_VER}\n\n To continue installation choose YES\n To abort choose NO"
   fi
   log_message "=======        Detected compatible version ${CMU_SW_VER}          ======="
+  [ $COMPAT_GROUP -eq 8 ] && log_message "=======    v74: Tweaks not tested on v74 will be skipped     ======="
 else
   # Removing the comment (#) from the following line will allow MZD-AIO-TI to run with unknown fw versions ** ONLY MODIFY IF YOU KNOW WHAT YOU ARE DOING **
   # show_message_OK "Detected previously unknown version ${CMU_SW_VER}!\n\n To continue anyway choose YES\n To abort choose NO"

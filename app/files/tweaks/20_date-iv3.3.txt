@@ -106,7 +106,7 @@ fi
 # StatusBarCtrl.js is the file that needs to be compatability checked because of minor changes in FW v59+
 # Compatibility has been fixed now compatible with all FW v55 - v70.00.335
 STATUSBAR_COPY=0
-if [ $COMPAT_GROUP -gt 6 ]
+if [ $COMPAT_GROUP -eq 7 ]
 then
 	killall -q jci-dialog
 	/jci/tools/jci-dialog --confirm --title="DATE TO STATUSBAR" --text="YOUR FW VERSION IS ${CMU_SW_VER}\nDATE TO STATUSBAR TWEAK HAS ONLY\n BEEN TESTED UP TO V70.00.335\n\n***** INSTALL AT YOUR OWN RISK! *****" --ok-label="INSTALL" --cancel-label="SKIP"

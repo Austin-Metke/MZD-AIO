@@ -99,6 +99,20 @@ describe('(integration) MZD-AIO-TI', function () {
     expect(pageErrors).to.deep.equal([])
   })
 
+  it('wraps tweaks not tested on v74 so tweaks.sh skips them there', async () => {
+    await compile(['#IN6', '#IN24']) // Improved list loop, Castscreen-receiver (+ WiFi & SSH by default)
+
+    const script = fs.readFileSync(path.join(out, '_copy_to_usb', 'tweaks.sh'), 'utf8')
+    const tweak = (name) => fs.readFileSync(path.join(tweaks, name), 'utf8').replace(/\r\n/g, '\n')
+    expect(script).to.include(`if install_allowed "CASTSCREEN-RECEIVER"\nthen\n\n${tweak('24_castscreen-i.txt')}\nfi\n`)
+    expect(script).to.include(`if install_allowed "ENABLE WIFI"\nthen\n\n${tweak('00_wifi.txt')}\nfi\n`)
+    expect(script).to.include(`if install_allowed "SSH_BRINGBACK"\nthen\n\n${tweak('00_sshbringback.txt')}\nfi\n`)
+    // List loop has been tested on v74 so it is not wrapped
+    expect(script).to.include(tweak('06_listloop-i.txt'))
+    expect(script.match(/install_allowed "/g)).to.have.lengthOf(3)
+    expect(pageErrors).to.deep.equal([])
+  })
+
   it('applies a color scheme from the bundled color-schemes pack', async () => {
     await compile(['#colors', '#color1']) // Blue
     const blue = path.join(out, '_copy_to_usb', 'config', 'color-schemes', 'Blue')
