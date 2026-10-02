@@ -110,9 +110,17 @@ function removeMatching (dir, pattern) {
   }
 }
 
+// extract-zip writes later entries through symlinks an archive creates
+// (GHSA-jmr9-qjv8-65gv, GHSA-7pqw-9j4j-h8q3; no fixed release). None of the
+// bundled zips contain symlinks, so refuse them.
+function rejectSymlinks (entry) {
+  const mode = (entry.externalFileAttributes >> 16) & 0xFFFF
+  if ((mode & 0o170000) === 0o120000) throw new Error(`Refusing to extract symlink ${entry.fileName}`)
+}
+
 /** extract(zipPath, { dir }, callback). extract-zip 2 is promise-only and needs an absolute dir. */
 function extract (src, options, callback) {
-  extractZip(src, { ...options, dir: path.resolve(options.dir) }).then(() => callback(null), callback)
+  extractZip(src, { ...options, dir: path.resolve(options.dir), onEntry: rejectSymlinks }).then(() => callback(null), callback)
 }
 
 module.exports = { copydir, appendFiles, convertToLF, removePath, removeMatching, extract }

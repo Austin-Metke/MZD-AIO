@@ -105,5 +105,14 @@ describe('(unit) fs-utils', () => {
       await call(extract, zip, { dir: dest })
       expect(fs.existsSync(path.join(tmp, 'theme', 'jci'))).to.equal(true)
     })
+
+    it('refuses archives that write through a symlink entry', async () => {
+      // 'link' -> ../escaped.txt, then a file entry named 'link'
+      const zip = path.join(__dirname, '..', 'fixtures', 'symlink-escape.zip')
+      fs.mkdirSync(path.join(tmp, 'dest'))
+      const err = await call(extract, zip, { dir: path.join(tmp, 'dest') }).catch((e) => e)
+      expect(err.message).to.include('Refusing to extract symlink')
+      expect(fs.existsSync(path.join(tmp, 'escaped.txt'))).to.equal(false)
+    })
   })
 })
